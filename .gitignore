@@ -1,0 +1,7 @@
+venv
+node_modules
+dist
+package-lock.json
+.DS_Store
+__pycache__
+app.db
