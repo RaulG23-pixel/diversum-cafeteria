@@ -1,0 +1,22 @@
+# Dockerfile para el Backend Python
+# Usa una imagen base de Python ligera
+FROM python:3.9-slim-buster
+
+# Establece el directorio de trabajo dentro del contenedor
+WORKDIR ./
+
+# Copia los archivos de requisitos e instala las dependencias
+COPY requirements.txt .
+RUN pip install --no-cache-dir -r requirements.txt
+
+# Copia el resto de tu código de la aplicación
+COPY . .
+
+# Expone el puerto en el que escucha tu aplicación Python (ej. 8000 para Django, 5000 para Flask)
+EXPOSE 8000
+
+# Comando para iniciar la aplicación cuando el contenedor se ejecute
+# Si usas Gunicorn para Django/Flask:
+#CMD ["gunicorn", "--bind", "0.0.0.0:8000", "your_project_name.wsgi:application"]
+# O para Flask simple:
+CMD ["python", "./src/app.py"]

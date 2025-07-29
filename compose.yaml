@@ -1,0 +1,41 @@
+
+services:
+  backend:
+    build: ./backend
+    # Recomendado: Usa Gunicorn para producción
+    # Asegúrate de que gunicorn esté en tu requirements.txt y el Dockerfile lo instale
+    command: gunicorn --bind 0.0.0.0:8000 src.main:app # O la ruta correcta a tu app Flask si main.py está en src
+
+    expose:
+      - "8000"
+    # Si tienes variables de entorno para el backend
+    # env_file:
+    #   - ./backend/.env
+
+  frontend:
+    build: ./frontend
+    # No necesitas 'ports' si Nginx va a servir los archivos estáticos directamente desde el volumen
+    # Si tu frontend tiene un servidor de desarrollo interno (ej. `npm start`), podrías usar 'expose'
+    # si Nginx lo va a proxyficar (pero para un build de React + Nginx, no es común).
+    # En este caso, Nginx servirá los archivos estáticos directamente de la carpeta 'build'.
+    # Si el frontend necesitara un puerto interno para comunicación con Nginx, usarías 'expose'.
+    # Pero para servir archivos estáticos, no se requiere que el contenedor frontend esté activo en tiempo de ejecución.
+    # El paso de 'build' es suficiente.
+    depends_on:
+      - backend # Orden de inicio
+
+  nginx:
+    image: nginx:latest
+    ports:
+      - "80:80"  # Puerto HTTP para acceso público
+      - "443:443" # Puerto HTTPS para acceso público (si configuras SSL)
+    volumes:
+      # Monta tu configuración Nginx, asumiendo que está en ./nginx/nginx.conf
+      - ./nginx/nginx.conf:/etc/nginx/nginx.conf
+      # Monta la salida de la construcción de React para que Nginx la sirva
+      - ./frontend/dist:/var/www/html
+      # Opcional: Volumen para certificados SSL si usas Let's Encrypt con Certbot en el host
+      # - /etc/letsencrypt:/etc/letsencrypt:ro
+    depends_on:
+      - frontend # Nginx debe iniciar después de que el frontend esté construido
+      - backend  # Nginx debe iniciar después del backend para proxyficar
